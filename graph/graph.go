@@ -1,5 +1,7 @@
 package graph
 
+import "fmt"
+
 const (
 	KErrorNone               int = 0
 	KErrorNodeNotFound       int = -1
@@ -7,8 +9,8 @@ const (
 )
 
 type Arc struct {
-	weight   float64
 	from, to uint64
+	weight   float64
 }
 
 type Node struct {
@@ -115,6 +117,7 @@ func (n *Node) GetOutboundArcList() []uint64 {
 	return n.outbound
 }
 
+
 //
 // Graph methods
 //
@@ -206,6 +209,75 @@ func (g *Graph) GetArcCount() int {
 	return len(g.arcs)
 }
 
+
+func (g *Graph)GetOrphanedNodeIDs () []uint64 {
+	var  nodeIds []uint64
+
+	for _,node := range g.nodes {
+		if len(node.inbound) == 0 && len (node.outbound) == 0 {
+			nodeIds = append (nodeIds, node.id)
+		}
+	}
+	return nodeIds
+}
+
+
+func (g *Graph)RemoveNodeById (id uint64) bool {
+	var index int
+
+	if index = g.findNodeIndexWithId (id); index == KErrorNodeNotFound {
+		return false // invalid node id in g	
+	}
+
+	fmt.Println (g.arcs)
+
+	// Disconnect all inbound nodes
+	for _, nodeId := range g.nodes[index].inbound {
+		nodeReferenceIndex := g.findNodeIndexWithId (nodeId)
+	
+		// this needs to be streamlined later
+		g.removeArcsBetweenTwoNodes (nodeId, id)
+	 
+	 	// remove node reference
+	 	if nodeReferenceIndex >= 0 {
+			// remove arcs between these two nodes
+			
+			// remove node reference
+			pos:= findNodeIdInList (g.nodes[nodeReferenceIndex].outbound, id)
+			if len(g.nodes[nodeReferenceIndex].outbound) == 1 {
+				g.nodes[nodeReferenceIndex].outbound = nil
+			} else {
+				g.nodes[nodeReferenceIndex].outbound = append(g.nodes[nodeReferenceIndex].outbound[:pos], g.nodes[nodeReferenceIndex].outbound[pos+1:]...)
+			}
+		}
+	}
+
+	// disconnect all outbound nodex
+	for _, nodeId := range g.nodes[index].outbound {
+		nodeReferenceIndex := g.findNodeIndexWithId (nodeId)
+		
+		// this needs to be streamlined later
+		g.removeArcsBetweenTwoNodes (id, nodeId)
+	 
+		// remove node reference				
+		if nodeReferenceIndex >= 0 {
+			pos := findNodeIdInList (g.nodes[nodeReferenceIndex].inbound, id)
+			if len(g.nodes[nodeReferenceIndex].inbound) == 1 { 
+				g.nodes[nodeReferenceIndex].inbound = nil
+			} else {
+				g.nodes[nodeReferenceIndex].inbound = append(g.nodes[nodeReferenceIndex].inbound[:pos], g.nodes[index].inbound[pos+1:]...)
+			}
+		}
+	}
+
+	//remove the node itself
+	g.nodes = append(g.nodes[:index], g.nodes[index+1:]...)
+
+	fmt.Println (g.arcs)
+
+	return true
+}
+
 // private helper function
 func (g *Graph) findNodeWithId(id uint64) (int, Node) {
 	for index, node := range g.nodes {
@@ -217,6 +289,24 @@ func (g *Graph) findNodeWithId(id uint64) (int, Node) {
 	return KErrorNodeNotFound, Node{}
 }
 
+func (g *Graph)removeArcsBetweenTwoNodes (from, to uint64) {
+	fmt.Printf ("Removing arcs between %d and %d\n", from, to)
+	for index, arc := range g.arcs {
+		if arc.from == from && arc.to == to {
+			g.arcs = append (g.arcs[:index], g.arcs[index+1:]...)
+		}
+	}
+}
+
+func findNodeIdInList (list []uint64, id uint64) int {
+	for idx, _ := range list {
+		if list[idx] == id {
+			return idx
+		}
+	}
+	return -1
+}
+
 func (g *Graph) findNodeIndexWithId(id uint64) int {
 	for index, node := range g.nodes {
 		if node.id == id {
@@ -226,3 +316,5 @@ func (g *Graph) findNodeIndexWithId(id uint64) int {
 
 	return KErrorNodeNotFound
 }
+
+
