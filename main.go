@@ -2,121 +2,97 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	fileutilities "github.com/colinwilcox1967/golangfileutilities"
+	graph "github.com/colinwilcox1967/golanggraphs/graph"
+	"strings"
 )
 
 var (
-	g Graph
+	g graph.Graph
 )
 
-type Arc struct {
-	weight   float64
-	from, to Node
-}
+func loadGraphDefinitionFromFile(filename string) error {
 
-type Node struct {
-	id       uint64
-	value    float64
-	inbound  []Arc
-	outbound []Arc
-}
+	//N:<id>-<value>
+	//A:<from>-<to>-<weight>
 
-type Graph struct {
-	nodes []Node
-	arcs  []Arc
-}
+	var nodeDetails []string
+	var arcDetails []string
+	var err error
+	var lines []string
 
-func (g *Graph) Init() {
-	g.nodes = nil
-	g.arcs = nil
-}
+	if err, lines = fileutilities.ReadFileAsLines(filename); err == nil {
 
-func (g *Graph)AddNode (id uint64, value float64) int {
-	if !g.uniqueId (id) {
-		return -1 // define later
-	} 	
+		// scan all nodes the scan all arcs
+		for _, line := range lines {
+			line = strings.ToUpper(line)
+			if len(line) > 2 && line[0:2] == "N:" {
+				newNodes := strings.Split(line[2:], ",")
 
-	// we have a new Id
-	var newNode Node 
-	g.nodes = append (g.nodes, newNode)
-
-	return 0 // KErrorNone
-}
-
-func (g *Graph)uniqueId(id uint64) bool {
-	for _, node := range g.nodes {
-		if node.GetId() == id {
-			return false
+				for _, node := range newNodes {
+					nodeDetails = append(nodeDetails, node)
+				}
+			}
 		}
-	}	
-	return true
-}
 
 
-func (g *Graph) IsConnected(fromNode, toNode Node) bool {
-	id := toNode.GetId()
-	inboundArcs := fromNode.GetInboundArcList()
-	outboundArcs := fromNode.GetOutboundArcList()
-
-	for _, arc := range inboundArcs {
-		if arc.GetFromNodeId() == id {
-			return true
+		// add in any arc definitions
+		for _, line := range lines {
+			line = strings.ToUpper(line)
+			if len(line) > 2 && line[0:2] == "A:" {
+				newArcs := strings.Split(line[2:], ",")
+				for _, arc := range newArcs {
+					arcDetails = append(arcDetails, arc)
+				}
+			}
 		}
+
+		// now build the graph will the nodes then connect them up
+		for _, node := range nodeDetails {
+			// each node item is of form <id>-<value>
+			index := strings.Index (node, "-")
+
+			id, _ := strconv.ParseInt(node[:index], 10, 64)
+			value, _ := strconv.ParseFloat(node[index+1:], 64)
+	
+			g.AddNode (uint64(id), float64(value))
+		}
+
+		for _, arc := range arcDetails {
+			firstDash  := strings.Index(arc, "-")
+			secondDash := strings.Index (arc[firstDash+1:], "-")
+			from,_ := strconv.Atoi(arc[:firstDash])
+			to,_ := strconv.Atoi(arc[firstDash+1:secondDash])
+			weight,_ := strconv.ParseFloat(arc[secondDash+1:], 64)
+
+			g.AddArc (uint64(from), uint64(to), float64(weight))
+		}
+		
+		return nil
 	}
 
-	for _, arc := range outboundArcs {
-		if arc.GetToNodeId() == id {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (g *Graph) GetNodeCount() int {
-
-	return len(g.nodes)
-}
-
-func (a *Arc) GetFromNode() Node {
-	return a.from
-}
-
-func (a *Arc) GetToNode() Node {
-	return a.to
-}
-
-func (a *Arc) GetFromNodeId() uint64 {
-	n := a.GetFromNode()
-	return n.GetId()
-}
-
-func (a *Arc) GetToNodeId() uint64 {
-	n := a.GetToNode()
-	return n.GetId()
-}
-
-func (n *Node) GetInboundArcCount() int {
-	return len(n.inbound)
-}
-
-func (n *Node) GetOutboundArcCount() int {
-	return len(n.outbound)
-}
-
-func (n *Node) GetId() uint64 {
-	return n.id
-}
-
-func (n *Node) GetInboundArcList() []Arc {
-	return n.inbound
-}
-
-func (n *Node) GetOutboundArcList() []Arc {
-	return n.outbound
+	return err
 }
 
 func main() {
 
-	g.Init()
+	g = graph.CreateNewGraph()
+	g.AddNode (1,10)
+	g.AddNode (2,5)
+	g.AddNode (3,7)
+	g.AddArc(1,2,.1)
+	g.AddArc (2,3,.1)
+	g.AddArc (3,2,0.1)
+	g.AddArc (3,1,.2)
+
 	fmt.Printf("Number of nodes = %d\n", g.GetNodeCount())
+	fmt.Printf("Number of arcs = %d\n", g.GetArcCount())
+
+	g.RemoveNodeById(2)
+
+//	if err := loadGraphDefinitionFromFile("test.txt"); err == nil {
+	fmt.Printf("Number of nodes = %d\n", g.GetNodeCount())
+	fmt.Printf("Number of arcs = %d\n", g.GetArcCount())
+
 }
