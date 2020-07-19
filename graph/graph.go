@@ -48,7 +48,7 @@ func (a *Arc) New(fromNode, toNode uint64, weight float64) Arc {
 	return newArc
 }
 
-func (a *Arc) GetFromNode() Node {
+func (a *Arc) FromNode() Node {
 	status, node := g.findNodeWithId(a.from)
 	if status == 0 {
 		return node
@@ -56,7 +56,7 @@ func (a *Arc) GetFromNode() Node {
 	return Node{}
 }
 
-func (a *Arc) GetToNode() Node {
+func (a *Arc) ToNode() Node {
 	status, node := g.findNodeWithId(a.to)
 	if status == 0 {
 		return node
@@ -65,17 +65,17 @@ func (a *Arc) GetToNode() Node {
 	return Node{}
 }
 
-func (a *Arc) GetFromNodeId() uint64 {
-	node := a.GetFromNode()
+func (a *Arc) FromNodeId() uint64 {
+	node := a.FromNode()
 	return node.id
 }
 
-func (a *Arc) GetToNodeId() uint64 {
-	node := a.GetToNode()
+func (a *Arc) ToNodeId() uint64 {
+	node := a.ToNode()
 	return node.id
 }
 
-func (a *Arc) GetWeight() float64 {
+func (a *Arc) Weight() float64 {
 	return a.weight
 }
 
@@ -91,27 +91,27 @@ func (n *Node) New(id uint64, value float64) Node {
 	return node
 }
 
-func (n *Node) GetInboundArcCount() int {
+func (n *Node) InboundArcCount() int {
 	return len(n.inbound)
 }
 
-func (n *Node) GetOutboundArcCount() int {
+func (n *Node) OutboundArcCount() int {
 	return len(n.outbound)
 }
 
-func (n *Node) GetId() uint64 {
+func (n *Node) Id() uint64 {
 	return n.id
 }
 
-func (n *Node) GetValue() float64 {
+func (n *Node) Value() float64 {
 	return n.value
 }
 
-func (n *Node) GetInboundArcList() []uint64 {
+func (n *Node) InboundArcList() []uint64 {
 	return n.inbound
 }
 
-func (n *Node) GetOutboundArcList() []uint64 {
+func (n *Node) OutboundArcList() []uint64 {
 	return n.outbound
 }
 
@@ -157,18 +157,18 @@ func (g *Graph) AddNode(id uint64, value float64) int {
 
 func (g *Graph) uniqueId(id uint64) bool {
 	for _, node := range g.nodes {
-		if node.GetId() == id {
+		if node.Id() == id {
 			return false
 		}
 	}
 	return true
 }
 
-func (g *Graph) GetNodeInboundConnections(index int) []uint64 {
+func (g *Graph) NodeInboundConnections(index int) []uint64 {
 	return g.nodes[index].inbound
 }
 
-func (g *Graph) GetNodeOutboundConnections(index int) []uint64 {
+func (g *Graph) NodeOutboundConnections(index int) []uint64 {
 	return g.nodes[index].outbound
 }
 
@@ -179,8 +179,8 @@ func (g *Graph) IsConnected(fromNode, toNode uint64) bool {
 		return false
 	}
 
-	inboundArcs := node.GetInboundArcList()
-	outboundArcs := node.GetOutboundArcList()
+	inboundArcs := node.InboundArcList()
+	outboundArcs := node.OutboundArcList()
 
 	for _, connectedNode := range inboundArcs {
 		if connectedNode == fromNode {
@@ -197,16 +197,16 @@ func (g *Graph) IsConnected(fromNode, toNode uint64) bool {
 	return false
 }
 
-func (g *Graph) GetNodeCount() int {
+func (g *Graph) NodeCount() int {
 
 	return len(g.nodes)
 }
 
-func (g *Graph) GetArcCount() int {
+func (g *Graph) ArcCount() int {
 	return len(g.arcs)
 }
 
-func (g *Graph) GetOrphanedNodeIDs() []uint64 {
+func (g *Graph) OrphanedNodeIDs() []uint64 {
 	var nodeIds []uint64
 
 	for _, node := range g.nodes {
