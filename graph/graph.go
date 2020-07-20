@@ -6,18 +6,6 @@ const (
 	KErrorConflictingNodeIds int = -2
 )
 
-type Arc struct {
-	from, to uint64
-	weight   float64
-}
-
-type Node struct {
-	id       uint64
-	value    float64
-	inbound  []uint64
-	outbound []uint64
-}
-
 type Graph struct {
 	nodes []Node
 	arcs  []Arc
@@ -35,85 +23,7 @@ func CreateNewGraph() Graph {
 	return g
 }
 
-//
-// Arc methods
-//
-func (a *Arc) New(fromNode, toNode uint64, weight float64) Arc {
 
-	var newArc Arc
-	newArc.from = fromNode
-	newArc.to = toNode
-	newArc.weight = weight
-
-	return newArc
-}
-
-func (a *Arc) FromNode() Node {
-	status, node := g.findNodeWithId(a.from)
-	if status == 0 {
-		return node
-	}
-	return Node{}
-}
-
-func (a *Arc) ToNode() Node {
-	status, node := g.findNodeWithId(a.to)
-	if status == 0 {
-		return node
-	}
-
-	return Node{}
-}
-
-func (a *Arc) FromNodeId() uint64 {
-	node := a.FromNode()
-	return node.id
-}
-
-func (a *Arc) ToNodeId() uint64 {
-	node := a.ToNode()
-	return node.id
-}
-
-func (a *Arc) Weight() float64 {
-	return a.weight
-}
-
-//
-// Node methods
-//
-func (n *Node) New(id uint64, value float64) Node {
-	var node Node
-	node.value = value
-	node.id = id
-	node.inbound = nil
-	node.outbound = nil
-	return node
-}
-
-func (n *Node) InboundArcCount() int {
-	return len(n.inbound)
-}
-
-func (n *Node) OutboundArcCount() int {
-	return len(n.outbound)
-}
-
-func (n *Node) Id() uint64 {
-	return n.id
-}
-
-func (n *Node) Value() float64 {
-	return n.value
-}
-
-func (n *Node) InboundArcList() []uint64 {
-	return n.inbound
-}
-
-func (n *Node) OutboundArcList() []uint64 {
-	return n.outbound
-}
 
 //
 // Graph methods
