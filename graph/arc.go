@@ -46,8 +46,20 @@ func (a *Arc) ToNodeId() uint64 {
 	return node.id
 }
 
+func (a *Arc)SetFromNodeId (fromNode uint64) {
+	a.from = fromNode	
+}
+
+func (a *Arc)SetToNodeId (toNode uint64) {
+	a.to = toNode
+}
+
 func (a *Arc) Weight() float64 {
 	return a.weight
+}
+
+func (a *Arc)SetWeight (weight float64) {
+	a.weight = weight
 }
 
 

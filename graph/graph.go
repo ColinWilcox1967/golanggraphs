@@ -11,6 +11,7 @@ type Graph struct {
 	arcs  []Arc
 }
 
+// package scope global variables
 var (
 	g Graph
 )
@@ -22,8 +23,6 @@ func CreateNewGraph() Graph {
 
 	return g
 }
-
-
 
 //
 // Graph methods
@@ -65,14 +64,6 @@ func (g *Graph) AddNode(id uint64, value float64) int {
 	return KErrorNone
 }
 
-func (g *Graph) uniqueId(id uint64) bool {
-	for _, node := range g.nodes {
-		if node.Id() == id {
-			return false
-		}
-	}
-	return true
-}
 
 func (g *Graph) NodeInboundConnections(index int) []uint64 {
 	return g.nodes[index].inbound
@@ -85,7 +76,7 @@ func (g *Graph) NodeOutboundConnections(index int) []uint64 {
 func (g *Graph) IsConnected(fromNode, toNode uint64) bool {
 
 	status, node := g.findNodeWithId(toNode)
-	if status == -1 {
+	if status == KErrorNodeNotFound {
 		return false
 	}
 
@@ -180,6 +171,15 @@ func (g *Graph) RemoveNodeById(id uint64) bool {
 }
 
 // private helper function
+func (g *Graph) uniqueId(id uint64) bool {
+	for _, node := range g.nodes {
+		if node.Id() == id {
+			return false
+		}
+	}
+	return true
+}
+
 func (g *Graph) findNodeWithId(id uint64) (int, Node) {
 	for index, node := range g.nodes {
 		if node.id == id {
@@ -204,7 +204,7 @@ func findNodeIdInList(list []uint64, id uint64) int {
 			return idx
 		}
 	}
-	return -1
+	return KErrorNodeNotFound
 }
 
 func (g *Graph) findNodeIndexWithId(id uint64) int {
