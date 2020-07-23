@@ -11,18 +11,18 @@ type Graph struct {
 	arcs  []Arc
 }
 
-// package scope global variables
 var (
-	g Graph
+gr Graph
 )
 
-func CreateNewGraph() Graph {
+func GetNewGraphInstance() Graph {
 
-	g.nodes = nil
-	g.arcs = nil
+	gr.nodes = nil
+	gr.arcs = nil
 
-	return g
+	return gr
 }
+
 
 //
 // Graph methods
@@ -64,6 +64,14 @@ func (g *Graph) AddNode(id uint64, value float64) int {
 	return KErrorNone
 }
 
+
+func (g *Graph)GetNodeList () []Node {
+	return g.nodes
+}
+
+func (g *Graph)GetArcList () []Arc {
+	return g.arcs
+}
 
 func (g *Graph) NodeInboundConnections(index int) []uint64 {
 	return g.nodes[index].inbound
@@ -181,8 +189,11 @@ func (g *Graph) uniqueId(id uint64) bool {
 }
 
 func (g *Graph) findNodeWithId(id uint64) (int, Node) {
+
 	for index, node := range g.nodes {
+	
 		if node.id == id {
+		
 			return index, g.nodes[index]
 		}
 	}

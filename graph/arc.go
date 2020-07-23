@@ -19,30 +19,33 @@ func (a *Arc) New(fromNode, toNode uint64, weight float64) Arc {
 	return newArc
 }
 
-func (a *Arc) FromNode() Node {
+func (a *Arc) FromNode(g *Graph) Node {
+
 	status, node := g.findNodeWithId(a.from)
-	if status == 0 {
+	if status >= 0 {
 		return node
 	}
 	return Node{}
 }
 
-func (a *Arc) ToNode() Node {
+func (a *Arc) ToNode(g *Graph) Node {
+	
 	status, node := g.findNodeWithId(a.to)
-	if status == 0 {
+
+	if status >= 0 {
 		return node
 	}
 
 	return Node{}
 }
 
-func (a *Arc) FromNodeId() uint64 {
-	node := a.FromNode()
+func (a *Arc) FromNodeId(g *Graph) uint64 {
+	node := a.FromNode(g)
 	return node.id
 }
 
-func (a *Arc) ToNodeId() uint64 {
-	node := a.ToNode()
+func (a *Arc) ToNodeId(g *Graph) uint64 {
+	node := a.ToNode(g)
 	return node.id
 }
 
