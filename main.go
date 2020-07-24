@@ -12,28 +12,6 @@ const (
 
 
 
-func trimStringLeftAndRight (line string) string {
-	
-	var leftIndex, rightIndex int
-	
-	leftIndex = 0
-	for line[leftIndex] == ' ' && leftIndex < len(line) {
-		leftIndex++ 	
-	}
-	newLine := line[:leftIndex]
-
-	rightIndex = len(newLine)
-	for newLine[rightIndex] == ' ' && rightIndex >= 0 {
-		rightIndex--
-	}
-	newLine = newLine[rightIndex:]
-
-
-	return newLine
-
-}
-
-
 
 // Calculates the shortest distance from a vertex to all other vertices in a weighted graph
 func BellmanFordAlgorithm(g *graph.Graph, sourceNodeId uint64) ([]float64, []float64) {
@@ -86,23 +64,13 @@ func showBellmanFordAlgorithm(g *graph.Graph, filename string) {
 	
 	if err := g.LoadGraphDefinitionFromFile (filename); err == nil {
 
-		fmt.Println ("NODES")
-		for index, node := range g.GetNodeList () {
-			fmt.Printf ("[%02d] %d %d\n", index, node.Id(), node.Value ())
-		}
-		fmt.Println ("ARCS")
-		for index, arc := range g.GetArcList () {
-			fmt.Printf ("[%02d] %d %d %f\n", index, arc.FromNodeId(g), arc.ToNodeId (g), arc.Weight ())
-		}
-
-
 		distance, predecessor := BellmanFordAlgorithm (g,0)
 
-		fmt.Println ("Outside")
-		
+	
 		// print out the distances here
+		fmt.Println ("Index   Distance  Predecesor")
 		for index := 0; index < len(g.GetNodeList()); index++ {
-			fmt.Printf ("[%02d] %f %f\n", index, distance[index], predecessor[index])
+			fmt.Printf ("[%02d]    %6f  %6f\n", index, distance[index], predecessor[index])
 		}
 	} else {
 		fmt.Printf ("Unable to load file '%s'\n", strings.ToUpper(filename))
@@ -112,5 +80,5 @@ func showBellmanFordAlgorithm(g *graph.Graph, filename string) {
 func main() {
 	g := graph.GetNewGraphInstance()
 
-	showBellmanFordAlgorithm(&g,"bellmanford.txt")
+	showBellmanFordAlgorithm(&g,"testfiles/bellmanford.txt")
 }

@@ -2,6 +2,7 @@ package graph
 
 import (
 "strings"
+"fmt"
 "strconv"
 	fileutilities "github.com/colinwilcox1967/golangfileutilities"
 )
@@ -47,16 +48,17 @@ func (g * Graph)LoadGraphDefinitionFromFile(filename string) error {
 	if err, lines = fileutilities.ReadFileAsLines(filename); err == nil {
 
 		// preprocess all the lines before parsing
-//for index, _ := range lines {
-//			lines[index] = trimStringLeftAndRight (lines[index])	
-//		}
+		for index := 0; index < len(lines);index++{
+			lines[index] = trimStringLeftAndRight (lines[index])	
+		}
 
 		// scan all nodes the scan all arcs
 		for _, line := range lines {
 			line = strings.ToUpper(line)
+			
 			if len(line) > 2 && line[0:2] == "N:" {
 				newNodes := strings.Split(line[2:], ",")
-
+				
 				for _, node := range newNodes {
 					nodeDetails = append(nodeDetails, node)
 				}
@@ -66,7 +68,9 @@ func (g * Graph)LoadGraphDefinitionFromFile(filename string) error {
 		// add in any arc definitions
 		for _, line := range lines {
 			line = strings.ToUpper(line)
+		
 			if len(line) > 2 && line[0:2] == "A:" {
+		
 				newArcs := strings.Split(line[2:], ",")
 				for _, arc := range newArcs {
 					arcDetails = append(arcDetails, arc)
@@ -79,22 +83,32 @@ func (g * Graph)LoadGraphDefinitionFromFile(filename string) error {
 			// each node item is of form <id>-<value>
 			index := strings.Index(node, "-")
 
-			id, _ := strconv.ParseInt(node[:index], 10, 64)
-			value, _ := strconv.ParseFloat(node[index+1:], 64)
+			if index >= 0 {
+				id, _ := strconv.ParseInt(node[:index], 10, 64)
+				value, _ := strconv.ParseFloat(node[index+1:], 64)
 
-			g.AddNode(uint64(id), float64(value))
+				g.AddNode(uint64(id), float64(value)) 
+			} else {
+				fmt.Printf ("Malformed node definition: '%s'. Skipping.\n", node)
+			}
+
 		}
 
 		for _, arc := range arcDetails {
-			firstDash := strings.Index(arc, "-")
-			secondDash := strings.Index(arc[firstDash+1:], "-")
-			from, _ := strconv.Atoi(arc[:firstDash])
-			to, _ := strconv.Atoi(arc[firstDash+1 : secondDash])
-			weight, _ := strconv.ParseFloat(arc[secondDash+1:], 64)
 
-			g.AddArc(uint64(from), uint64(to), float64(weight))
+			fragments := strings.Split (arc, "-")
+
+			
+			if len(fragments) == 3 {
+				from, _ := strconv.Atoi(fragments[0])
+				to, _ := strconv.Atoi(fragments[1])
+				weight, _ := strconv.ParseFloat(fragments[2], 64)
+
+				g.AddArc(uint64(from), uint64(to), float64(weight))
+			} else {
+				fmt.Printf ("Malformed arc definition: '%s'. Skipping.\n", arc)
+			}
 		}
-
 		return nil
 	}
 
@@ -253,6 +267,33 @@ func (g *Graph) RemoveNodeById(id uint64) bool {
 }
 
 // private helper function
+
+//
+// just tidies up config file lines
+//
+func trimStringLeftAndRight (line string) string {
+	
+////	var leftIndex, rightIndex int
+//	
+//	leftIndex = 0
+//	for line[leftIndex] == ' ' && leftIndex < len(line) {
+//		leftIndex++ 	
+//	}
+//	newLine := line[leftIndex:]
+//
+//	rightIndex = len(newLine)-1
+//	for newLine[rightIndex] == ' ' && rightIndex >= 0 {
+//		rightIndex--
+//	}
+//	newLine = newLine[:rightIndex+1]
+
+
+//	return newLine
+
+return line
+
+}
+
 func (g *Graph) uniqueId(id uint64) bool {
 	for _, node := range g.nodes {
 		if node.Id() == id {

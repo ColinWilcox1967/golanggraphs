@@ -1,6 +1,11 @@
-	N:0-10
-	N 1-5
-	N:2-7
-	A:0-1-3
-	A:1-2-5
-	A:0-2-4
+# Simple graph for BellmanFord algorithm 
+N:0-5
+N:1-10   
+N:3-10 
+
+
+A:0-1-4
+A:1-2-6
+A:2-3-8
+
+
