@@ -2,16 +2,12 @@ package main
 
 import (
 	"fmt"
-	fileutilities "github.com/colinwilcox1967/golangfileutilities"
-	graph "github.com/colinwilcox1967/golanggraphs/graph"
-	"math"
-	"strconv"
 	"strings"
+	graph "github.com/colinwilcox1967/golanggraphs/graph"
 )
 
 const (
-	MAXUINT = ^uint(0)
-	MAXINT  = int(MAXUINT >> 1)
+	SOME_RELATIVELY_BIG_FLOAT_VALUE = 999999.99
 )
 
 
@@ -37,72 +33,7 @@ func trimStringLeftAndRight (line string) string {
 
 }
 
-func loadGraphDefinitionFromFile(g graph.Graph, filename string) error {
 
-	//N:<id>-<value>
-	//A:<from>-<to>-<weight>
-
-	var nodeDetails []string
-	var arcDetails []string
-	var err error
-	var lines []string
-
-	if err, lines = fileutilities.ReadFileAsLines(filename); err == nil {
-
-		// preprocess all the lines before parsing
-		for index, _ := range lines {
-			lines[index] = trimStringLeftAndRight (lines[index])	
-		}
-
-		// scan all nodes the scan all arcs
-		for _, line := range lines {
-			line = strings.ToUpper(line)
-			if len(line) > 2 && line[0:2] == "N:" {
-				newNodes := strings.Split(line[2:], ",")
-
-				for _, node := range newNodes {
-					nodeDetails = append(nodeDetails, node)
-				}
-			}
-		}
-
-		// add in any arc definitions
-		for _, line := range lines {
-			line = strings.ToUpper(line)
-			if len(line) > 2 && line[0:2] == "A:" {
-				newArcs := strings.Split(line[2:], ",")
-				for _, arc := range newArcs {
-					arcDetails = append(arcDetails, arc)
-				}
-			}
-		}
-
-		// now build the graph will the nodes then connect them up
-		for _, node := range nodeDetails {
-			// each node item is of form <id>-<value>
-			index := strings.Index(node, "-")
-
-			id, _ := strconv.ParseInt(node[:index], 10, 64)
-			value, _ := strconv.ParseFloat(node[index+1:], 64)
-
-			g.AddNode(uint64(id), float64(value))
-		}
-
-		for _, arc := range arcDetails {
-			firstDash := strings.Index(arc, "-")
-			secondDash := strings.Index(arc[firstDash+1:], "-")
-			from, _ := strconv.Atoi(arc[:firstDash])
-			to, _ := strconv.Atoi(arc[firstDash+1 : secondDash])
-			weight, _ := strconv.ParseFloat(arc[secondDash+1:], 64)
-
-			g.AddArc(uint64(from), uint64(to), float64(weight))
-		}
-
-		return nil
-	}
-
-	return err
-}
 
 // Calculates the shortest distance from a vertex to all other vertices in a weighted graph
 func BellmanFordAlgorithm(g *graph.Graph, sourceNodeId uint64) ([]float64, []float64) {
@@ -115,9 +46,9 @@ func BellmanFordAlgorithm(g *graph.Graph, sourceNodeId uint64) ([]float64, []flo
 	predecesor = make([]float64, len(nodes))
 
 	// Setup the target arrays
-	for index, _ := range nodes {
+	for index := 0; index < len(nodes); index++ {
 		// infinitly far away and no previous noe
-		distance[index] = math.MaxFloat64
+		distance[index] = SOME_RELATIVELY_BIG_FLOAT_VALUE
 		predecesor[index] = -1
 	}
 
@@ -125,12 +56,13 @@ func BellmanFordAlgorithm(g *graph.Graph, sourceNodeId uint64) ([]float64, []flo
 	distance[sourceNodeId] = 0.0
 
 	// Repeatedly relax edges, considering the trivial case of a single node graph
-	for index := 1; index < len(nodes)-1; index++ {
+	for index := 1; index <= len(nodes)-1; index++ {
 		for _, arc := range arcs {
 			from := arc.FromNodeId(g)
 			to := arc.ToNodeId(g)
 			weight := arc.Weight()
-			if distance[from]+weight < distance[to] {
+
+			if distance[to] > distance[from]+weight {
 				distance[to] = distance[from] + weight
 				predecesor[to] = float64(from)
 			}
@@ -142,7 +74,7 @@ func BellmanFordAlgorithm(g *graph.Graph, sourceNodeId uint64) ([]float64, []flo
 		from := arc.FromNodeId(g)
 		to := arc.ToNodeId(g)
 		weight := arc.Weight()
-		if distance[from]+weight < distance[to] {
+		if distance[to] > distance[from]+weight {
 			fmt.Printf("The graph contains a negative-weight cycle\n")
 		}
 	}
@@ -150,29 +82,35 @@ func BellmanFordAlgorithm(g *graph.Graph, sourceNodeId uint64) ([]float64, []flo
 	return distance, predecesor
 }
 
-func showBellmanFordAlgorithm(g *graph.Graph) {
+func showBellmanFordAlgorithm(g *graph.Graph, filename string) {
 	
-	
-	//	if err := loadGraphDefinitionFromFile ("BELLMANFORD.TXT"); err == nil {
-	//		distance, predecessor := BellmanFordAlgorithm (g,0)
-	//
-	//		// print out the results here
-	//	}
+	if err := g.LoadGraphDefinitionFromFile (filename); err == nil {
 
-	distance, predecessor := BellmanFordAlgorithm (g,0)
+		fmt.Println ("NODES")
+		for index, node := range g.GetNodeList () {
+			fmt.Printf ("[%02d] %d %d\n", index, node.Id(), node.Value ())
+		}
+		fmt.Println ("ARCS")
+		for index, arc := range g.GetArcList () {
+			fmt.Printf ("[%02d] %d %d %f\n", index, arc.FromNodeId(g), arc.ToNodeId (g), arc.Weight ())
+		}
 
-	for index := 0; index < len(g.GetNodeList()); index++ {
-		fmt.Printf ("[%02d] %f %f\n", index, distance[index], predecessor[index])
+
+		distance, predecessor := BellmanFordAlgorithm (g,0)
+
+		fmt.Println ("Outside")
+		
+		// print out the distances here
+		for index := 0; index < len(g.GetNodeList()); index++ {
+			fmt.Printf ("[%02d] %f %f\n", index, distance[index], predecessor[index])
+		}
+	} else {
+		fmt.Printf ("Unable to load file '%s'\n", strings.ToUpper(filename))
 	}
-
 }
 
 func main() {
 	g := graph.GetNewGraphInstance()
 
-	g.AddNode(0, 10)
-	g.AddNode(1, 5)
-	g.AddArc(0, 1, 3)
-
-	showBellmanFordAlgorithm(&g)
+	showBellmanFordAlgorithm(&g,"bellmanford.txt")
 }
