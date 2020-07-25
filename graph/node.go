@@ -31,7 +31,7 @@ func (n *Node) Id() uint64 {
 	return n.id
 }
 
-func (n *Node) SetId (id uint64) {
+func (n *Node) SetId(id uint64) {
 	n.id = id
 }
 
@@ -39,7 +39,7 @@ func (n *Node) Value() float64 {
 	return n.value
 }
 
-func (n *Node)SetValue (value float64) {
+func (n *Node) SetValue(value float64) {
 	n.value = value
 }
 
@@ -50,7 +50,3 @@ func (n *Node) InboundArcList() []uint64 {
 func (n *Node) OutboundArcList() []uint64 {
 	return n.outbound
 }
-
-
-	
-	

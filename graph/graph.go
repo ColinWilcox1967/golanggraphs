@@ -1,12 +1,11 @@
 package graph
 
 import (
-"strings"
-"fmt"
-"strconv"
+	"fmt"
 	fileutilities "github.com/colinwilcox1967/golangfileutilities"
+	"strconv"
+	"strings"
 )
-
 
 const (
 	KErrorNone               int = 0
@@ -20,7 +19,7 @@ type Graph struct {
 }
 
 var (
-gr Graph
+	gr Graph
 )
 
 func GetNewGraphInstance() Graph {
@@ -31,11 +30,10 @@ func GetNewGraphInstance() Graph {
 	return gr
 }
 
-
 //
 // Graph methods
 //
-func (g * Graph)LoadGraphDefinitionFromFile(filename string) error {
+func (g *Graph) LoadGraphDefinitionFromFile(filename string) error {
 
 	//N:<id>-<value>
 	//A:<from>-<to>-<weight>
@@ -48,17 +46,19 @@ func (g * Graph)LoadGraphDefinitionFromFile(filename string) error {
 	if err, lines = fileutilities.ReadFileAsLines(filename); err == nil {
 
 		// preprocess all the lines before parsing
-		for index := 0; index < len(lines);index++{
-			lines[index] = trimStringLeftAndRight (lines[index])	
+		for index := 0; index < len(lines); index++ {
+			if len(lines[index]) > 0 {
+				lines[index] = trimStringLeftAndRight(lines[index])
+			}
 		}
 
 		// scan all nodes the scan all arcs
 		for _, line := range lines {
 			line = strings.ToUpper(line)
-			
+
 			if len(line) > 2 && line[0:2] == "N:" {
 				newNodes := strings.Split(line[2:], ",")
-				
+
 				for _, node := range newNodes {
 					nodeDetails = append(nodeDetails, node)
 				}
@@ -68,9 +68,9 @@ func (g * Graph)LoadGraphDefinitionFromFile(filename string) error {
 		// add in any arc definitions
 		for _, line := range lines {
 			line = strings.ToUpper(line)
-		
+
 			if len(line) > 2 && line[0:2] == "A:" {
-		
+
 				newArcs := strings.Split(line[2:], ",")
 				for _, arc := range newArcs {
 					arcDetails = append(arcDetails, arc)
@@ -87,18 +87,17 @@ func (g * Graph)LoadGraphDefinitionFromFile(filename string) error {
 				id, _ := strconv.ParseInt(node[:index], 10, 64)
 				value, _ := strconv.ParseFloat(node[index+1:], 64)
 
-				g.AddNode(uint64(id), float64(value)) 
+				g.AddNode(uint64(id), float64(value))
 			} else {
-				fmt.Printf ("Malformed node definition: '%s'. Skipping.\n", node)
+				fmt.Printf("Malformed node definition: '%s'. Skipping.\n", node)
 			}
 
 		}
 
 		for _, arc := range arcDetails {
 
-			fragments := strings.Split (arc, "-")
+			fragments := strings.Split(arc, "-")
 
-			
 			if len(fragments) == 3 {
 				from, _ := strconv.Atoi(fragments[0])
 				to, _ := strconv.Atoi(fragments[1])
@@ -106,12 +105,11 @@ func (g * Graph)LoadGraphDefinitionFromFile(filename string) error {
 
 				g.AddArc(uint64(from), uint64(to), float64(weight))
 			} else {
-				fmt.Printf ("Malformed arc definition: '%s'. Skipping.\n", arc)
+				fmt.Printf("Malformed arc definition: '%s'. Skipping.\n", arc)
 			}
 		}
 		return nil
 	}
-
 
 	return err
 }
@@ -128,8 +126,8 @@ func (g *Graph) AddArc(fromNode, toNode uint64, weight float64) int {
 	// add arc to graph arc list
 	g.arcs = append(g.arcs, newArc)
 
-	fromIndex := g.findNodeIndexWithId(fromNode)
-	toIndex := g.findNodeIndexWithId(toNode)
+	fromIndex := g.FindNodeIndexWithId(fromNode)
+	toIndex := g.FindNodeIndexWithId(toNode)
 
 	// hook up the nodes based on the arc information
 	g.nodes[fromIndex].outbound = append(g.nodes[fromIndex].outbound, uint64(toNode))
@@ -152,12 +150,11 @@ func (g *Graph) AddNode(id uint64, value float64) int {
 	return KErrorNone
 }
 
-
-func (g *Graph)GetNodeList () []Node {
+func (g *Graph) GetNodeList() []Node {
 	return g.nodes
 }
 
-func (g *Graph)GetArcList () []Arc {
+func (g *Graph) GetArcList() []Arc {
 	return g.arcs
 }
 
@@ -217,13 +214,13 @@ func (g *Graph) OrphanedNodeIDs() []uint64 {
 func (g *Graph) RemoveNodeById(id uint64) bool {
 	var index int
 
-	if index = g.findNodeIndexWithId(id); index == KErrorNodeNotFound {
+	if index = g.FindNodeIndexWithId(id); index == KErrorNodeNotFound {
 		return false // invalid node id in g
 	}
 
 	// Disconnect all inbound nodes
 	for _, nodeId := range g.nodes[index].inbound {
-		nodeReferenceIndex := g.findNodeIndexWithId(nodeId)
+		nodeReferenceIndex := g.FindNodeIndexWithId(nodeId)
 
 		// this needs to be streamlined later
 		g.removeArcsBetweenTwoNodes(nodeId, id)
@@ -244,7 +241,7 @@ func (g *Graph) RemoveNodeById(id uint64) bool {
 
 	// disconnect all outbound nodex
 	for _, nodeId := range g.nodes[index].outbound {
-		nodeReferenceIndex := g.findNodeIndexWithId(nodeId)
+		nodeReferenceIndex := g.FindNodeIndexWithId(nodeId)
 
 		// this needs to be streamlined later
 		g.removeArcsBetweenTwoNodes(id, nodeId)
@@ -266,31 +263,37 @@ func (g *Graph) RemoveNodeById(id uint64) bool {
 	return true
 }
 
+func (g *Graph) FindNodeIndexWithId(id uint64) int {
+	for index, node := range g.nodes {
+		if node.id == id {
+			return index
+		}
+	}
+
+	return KErrorNodeNotFound
+}
+
 // private helper function
 
-//
-// just tidies up config file lines
-//
-func trimStringLeftAndRight (line string) string {
-	
-////	var leftIndex, rightIndex int
-//	
-//	leftIndex = 0
-//	for line[leftIndex] == ' ' && leftIndex < len(line) {
-//		leftIndex++ 	
-//	}
-//	newLine := line[leftIndex:]
-//
-//	rightIndex = len(newLine)-1
-//	for newLine[rightIndex] == ' ' && rightIndex >= 0 {
-//		rightIndex--
-//	}
-//	newLine = newLine[:rightIndex+1]
+func trimStringLeftAndRight(line string) string {
 
+	var leftIndex, rightIndex int
 
-//	return newLine
+	leftIndex = 0
+	for line[leftIndex] == ' ' && leftIndex < len(line) {
+		leftIndex++
+	}
+	newLine := line[leftIndex:]
 
-return line
+	rightIndex = len(newLine) - 1
+	for newLine[rightIndex] == ' ' && rightIndex >= 0 {
+		rightIndex--
+	}
+	newLine = newLine[:rightIndex+1]
+
+	return newLine
+
+	return line
 
 }
 
@@ -306,9 +309,9 @@ func (g *Graph) uniqueId(id uint64) bool {
 func (g *Graph) findNodeWithId(id uint64) (int, Node) {
 
 	for index, node := range g.nodes {
-	
+
 		if node.id == id {
-		
+
 			return index, g.nodes[index]
 		}
 	}
@@ -330,15 +333,5 @@ func findNodeIdInList(list []uint64, id uint64) int {
 			return idx
 		}
 	}
-	return KErrorNodeNotFound
-}
-
-func (g *Graph) findNodeIndexWithId(id uint64) int {
-	for index, node := range g.nodes {
-		if node.id == id {
-			return index
-		}
-	}
-
 	return KErrorNodeNotFound
 }

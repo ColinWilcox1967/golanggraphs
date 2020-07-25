@@ -5,7 +5,6 @@ type Arc struct {
 	weight   float64
 }
 
-
 //
 // Arc methods
 //
@@ -29,7 +28,7 @@ func (a *Arc) FromNode(g *Graph) Node {
 }
 
 func (a *Arc) ToNode(g *Graph) Node {
-	
+
 	status, node := g.findNodeWithId(a.to)
 
 	if status >= 0 {
@@ -49,11 +48,11 @@ func (a *Arc) ToNodeId(g *Graph) uint64 {
 	return node.id
 }
 
-func (a *Arc)SetFromNodeId (fromNode uint64) {
-	a.from = fromNode	
+func (a *Arc) SetFromNodeId(fromNode uint64) {
+	a.from = fromNode
 }
 
-func (a *Arc)SetToNodeId (toNode uint64) {
+func (a *Arc) SetToNodeId(toNode uint64) {
 	a.to = toNode
 }
 
@@ -61,8 +60,6 @@ func (a *Arc) Weight() float64 {
 	return a.weight
 }
 
-func (a *Arc)SetWeight (weight float64) {
+func (a *Arc) SetWeight(weight float64) {
 	a.weight = weight
 }
-
-
